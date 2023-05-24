@@ -1,0 +1,41 @@
+{
+  "name": "chat-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": "16.16.0"
+  },
+  "scripts": {
+    "lint:check": "eslint src/**/*.ts",
+    "dev": "NODE_ENV=development nodemon -e ts",
+    "start": "npm run types:check && NODE_ENV=production nodemon dist/src/app.js",
+    "types:check": "tsc --build"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "@koa/cors": "^4.0.0",
+    "@koa/router": "^12.0.0",
+    "dotenv": "^16.0.3",
+    "koa": "^2.14.1",
+    "koa-body": "^6.0.1",
+    "koa-session": "^6.4.0"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.13.5",
+    "@types/koa__router": "^12.0.0",
+    "@types/koa-session": "^6.4.1",
+    "@types/node": "^18.15.3",
+    "@typescript-eslint/eslint-plugin": "^5.55.0",
+    "@typescript-eslint/parser": "^5.55.0",
+    "eslint": "8.22.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "nodemon": "^2.0.21",
+    "typescript": "^4.9.5"
+  },
+  "license": "ISC"
+}
+
