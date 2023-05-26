@@ -15,9 +15,31 @@ if (process.env.NODE_ENV === 'production') {
 
 import Koa from 'koa';
 import { koaBody } from 'koa-body';
+import cors from '@koa/cors';
+import dbRun from './src/config/mongo.config';
+import session from 'koa-session';
+import { userRouter } from './src/user/user.routes';
+import { utmRouter } from './src/utm/utm.routes';
+
+const { PORT, SESSION_SECRET_KEY } = process.env;
 
 const app = new Koa();
 
+// mongoDB connection.
+(async () => dbRun())();
+
+app.use(cors({
+  origin : '*',
+  credentials : true,
+}));
+
+// @ts-ignore
+app.keys = [SESSION_SECRET_KEY];
+app.use(session(app));
+
 app.use(koaBody());
 
-app.listen(process.env.PORT, () => console.log(`Server is running on port ${process.env.PORT}`));
+app.use(utmRouter.routes()).use(utmRouter.prefix('/api/utms').allowedMethods());
+app.use(userRouter.routes()).use(userRouter.prefix('/api/users').allowedMethods());
+
+app.listen(process.env.PORT, () => console.log(`Server is running on port ${PORT}`));
