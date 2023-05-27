@@ -17,3 +17,5 @@ interface responseBody {
 - `dist` : `dist.sh` 를 실행해서 elasticbeanstalk 에 올릴 zip 파일을 생성합니다.
 - `build` : `tsc` 를 이용해 번들링 후 elasticbeanstalk config 파일들과 함께 zip 파일을 생성합니다.
 - `deploy` : `build` 및 `dist` 를 실행 후 현재 로컬
+
+<img width="1748" alt="Untitled" src="https://github.com/U-Wreckcar/Uwreckcar-server/assets/112174727/efe65c53-aa63-457a-9e92-fe46697dfeea">
