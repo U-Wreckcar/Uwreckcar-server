@@ -18,7 +18,7 @@
     "lint:check": "eslint src/**/*.ts",
     "dev": "NODE_ENV=development nodemon -e ts",
     "start": "node dist/app.js",
-    "build": "rm -rf build && tsc --build && npm run dist",
+    "build": "tsc --build && npm run dist",
     "dist": "sh ./dist.sh",
     "deploy": "npm run build && git add . && git commit -m \":rocket: v$npm_package_version\" && eb deploy --staged"
   },
