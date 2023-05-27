@@ -1,4 +1,9 @@
 version: 0.2
+eb_codebuild_settings:
+  CodeBuildServiceRole: codebuild-uwreckcar-codebuild-service-role
+  ComputeType: BUILD_GENERAL1_SMALL
+  Image: Node.js 16 running on 64bit Amazon Linux 2
+  Timeout: 60
 phases:
   install:
     runtime-versions:
@@ -22,4 +27,4 @@ phases:
   artifacts:
     files:
       - '**/*'
-  name: uwreckcar-$(date +%Y-%m-%d)
+    name: uwreckcar-$(date +%Y-%m-%d)
