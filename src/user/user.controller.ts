@@ -31,20 +31,20 @@ export async function withdrawCtr (ctx: Context, next: Next) {
 // 유저 정보 가져오기.
 export async function getUserProfileCtr (ctx: Context, next: Next) {
   const {
-    user_id,
-    user_name,
+    userId,
+    name,
     email,
-    profile_img,
-    company_name,
+    profileImg,
+    company,
   } = ctx.state.user;
   ctx.response.body = {
     result : { success : true, message : '' },
     data : {
-      user_id,
-      user_name,
+      userId,
+      name,
       email,
-      profile_img,
-      company_name,
+      profileImg,
+      company,
     },
   };
   await next();
@@ -101,21 +101,20 @@ export async function signinCtr (ctx: Context, next: Next) {
   if (userData !== null) {
     const inputPassword = await getHashedPassword(password, userData.salt) as { password: string, salt: string };
     if (userData.password === inputPassword.password) {
-      const access_token = jwtService.createAccessToken(userData);
-      const refresh_token = jwtService.createRefreshToken(userData);
+      userData['userId'] = userData._id.toString();
+      const token = jwtService.createAccessToken(userData);
       ctx.response.body = {
         result : { success : true, message : '' },
         data : {
           userData : {
-            user_id : userData.user_id,
-            username : userData.username,
+            userId : userData._id.toString(),
+            name : userData.name,
             email : userData.email,
-            profile_img : userData.profile_img,
-            company_name : userData.company_name,
-            marketing_accept : userData.marketing_accept,
+            profileImg : userData.profileImg,
+            company : userData.company,
+            isMarketing : userData.isMarketing,
           },
-          access_token,
-          refresh_token,
+          token,
         },
       };
     } else {
@@ -143,7 +142,7 @@ export async function signupCtr (ctx: Context, next: Next) {
     company,
     isMarketing,
     name,
-  } = ctx.requset.body.data;
+  } = ctx.request.body.data;
 
   const dupData = await getUserData(email);
   if (dupData) {

@@ -21,7 +21,8 @@ export async function setUserInfo (
     salt,
     company,
     isMarketing,
-    login_type : 'uwreckcar',
+    loginType : 'uwreckcar',
+    createdAt: new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, -5),
   });
 }
 

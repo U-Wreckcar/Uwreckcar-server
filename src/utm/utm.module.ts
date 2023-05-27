@@ -7,7 +7,7 @@ import { ShortenUrl, UTM } from './utm.types';
 
 // UTM 전체 조회
 export async function getAllUtms (userId: string) {
-  return await UtmDB.collection('utms').find({ userId : new ObjectId(userId) }).toArray();
+  return await UtmDB.collection('utms').find({ userId }).toArray();
 }
 
 // shortenUrl 전체 삭제.
@@ -16,7 +16,7 @@ export async function deleteShortUrl (shortId: string) {
 }
 
 // shortenUrl 클릭 수 가져오기.
-export async function getShortUrlClickCount (shortId: string) {
+export async function getShortUrl (shortId: string) {
   const shortenUrl = await ShortenUrlDB.collection('betaTest').findOne({ shortId }) as ShortenUrl;
   return shortenUrl.clickCount;
 }
@@ -45,7 +45,7 @@ export async function createUTM (userId: number, inputVal: any) {
 
   const short_id = nanoid(10);
   const axiosResponse = await axios.post('https://li.urcurly.site/rd', {
-    fullUrl,
+    full_url : fullUrl,
     id : short_id,
   });
   const shortenUrl = axiosResponse.data?.shortUrl;
@@ -65,9 +65,13 @@ export async function createUTM (userId: number, inputVal: any) {
     userId,
     fullUrl,
     shortenUrl : shortenUrl || '-',
-    short_id,
-    createdAt : new Date(createdAt) || Date.now(),
+    shortId : short_id,
+    createdAt : createdAt ? new Date(createdAt) : Date.now(),
   });
+  return {
+    fullUrl,
+    shortenUrl,
+  };
 }
 
 // UTM 삭제.
@@ -103,9 +107,7 @@ export async function createExcelFile (filename: string, data: Array<UTM> & ICon
     writeOptions : {}, // Style options from https://docs.sheetjs.com/docs/api/write-options
     RTL : false, // Display the columns from right-to-left (the default value is false)
   };
-  xlsx(sheetData, settings, () => {
-    console.log(`./temp/${filename}.xlsx file created.`);
-  });
+  xlsx(sheetData, settings, () => {});
 }
 
 // CSV file 추출하기.

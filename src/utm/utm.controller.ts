@@ -1,12 +1,11 @@
 import { Context, Next } from 'koa';
 import {
   getAllUtms,
-  getShortUrlClickCount,
   deleteShortUrl,
   createUTM,
   deleteUtm,
   createExcelFile,
-  createCSVFile,
+  createCSVFile, getShortUrl,
 } from './utm.module';
 import fs from 'fs';
 import { UTM } from './utm.types';
@@ -19,7 +18,8 @@ export async function getAllUtmsCtr (ctx: Context, next: Next) {
   if (dateFixResult) {
     const result = await Promise.all(
       dateFixResult.map(async (doc: UTM) => {
-        const clickCount = await getShortUrlClickCount(doc.shortId);
+        const clickCount = await getShortUrl(doc.shortId);
+
         return {
           _id : doc._id.toString(),
           url : doc.url,
@@ -57,13 +57,7 @@ export async function createUtmCtr (ctx: Context, next: Next) {
   // map 이 전부 끝날때까지 대기.
   const result = await Promise.all(
     utmsData.map(async (doc: UTM) => {
-      await createUTM(userId, doc);
-      // 성공 시 생성된 객체의 데이터 return
-      return {
-        utmId : doc._id.toString(),
-        fullUrl : doc.fullUrl,
-        shortenUrl : doc.shortenUrl,
-      };
+      return await createUTM(userId, doc);
     })
   );
 

@@ -15,6 +15,7 @@ if (process.env.NODE_ENV === 'production') {
 
 import Koa from 'koa';
 import { koaBody } from 'koa-body';
+import errorHandler from './src/util/error.handler';
 import cors from '@koa/cors';
 import dbRun from './src/config/mongo.config';
 import session from 'koa-session';
@@ -38,8 +39,13 @@ app.keys = [SESSION_SECRET_KEY];
 app.use(session(app));
 
 app.use(koaBody());
+app.use(errorHandler);
 
-app.use(utmRouter.routes()).use(utmRouter.prefix('/api/utms').allowedMethods());
 app.use(userRouter.routes()).use(userRouter.prefix('/api/users').allowedMethods());
+app.use(utmRouter.routes()).use(utmRouter.prefix('/api/utms').allowedMethods());
+
+app.on('error', (err: Error) => {
+  console.error('Error Listener : ', err);
+});
 
 app.listen(process.env.PORT, () => console.log(`Server is running on port ${PORT}`));
