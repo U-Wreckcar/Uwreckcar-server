@@ -1,16 +1,15 @@
 import { Context, DefaultContext, DefaultState, Next } from 'koa';
 import jwtService from './jwt.module';
 import { JwtPayload } from 'jsonwebtoken';
-import { findUserData } from '../user/user.module';
 import { Middleware } from '@koa/router';
 import axios from 'axios';
+import { getUserData } from '../user/user.module';
 
 export interface CustomContext extends Context {
   session: any;
 }
 
-export async function authentication (ctx: CustomContext & Context, next: Next)
-  : Promise<Middleware<DefaultState, DefaultContext, unknown>> {
+export async function authentication (ctx: CustomContext & Context, next: Next) {
   const refreshToken = ctx.headers['x-refresh-token'] as string;
 
   // 세션에 사용자 정보가 있는지 확인하고, 있다면 인증을 건너뛰기 - 매 api 요청마다의 인증 생략
@@ -51,7 +50,7 @@ export async function authentication (ctx: CustomContext & Context, next: Next)
         },
       });
 
-      const userData = await findUserData(newResponse.data.kakao_account.email);
+      const userData = await getUserData(newResponse.data.kakao_account.email);
       if (!userData) {
         ctx.response.redirect(`${process.env.CLIENT_URL}/login`);
         break;

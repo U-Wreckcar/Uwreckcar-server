@@ -22,8 +22,8 @@ export async function withdrawCtr (ctx: Context, next: Next) {
   await deleteUserInfo(userId);
   ctx.status = 200;
   ctx.response.body = {
-    success : true,
-    data : 'Withdrawal completed.',
+    result : { success : true, message : '' },
+    data : {},
   };
   await next();
 }
@@ -37,13 +37,15 @@ export async function getUserProfileCtr (ctx: Context, next: Next) {
     profile_img,
     company_name,
   } = ctx.state.user;
-  ctx.status = 200;
   ctx.response.body = {
-    user_id,
-    user_name,
-    email,
-    profile_img,
-    company_name,
+    result : { success : true, message : '' },
+    data : {
+      user_id,
+      user_name,
+      email,
+      profile_img,
+      company_name,
+    },
   };
   await next();
 }

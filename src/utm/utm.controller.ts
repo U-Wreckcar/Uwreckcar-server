@@ -3,130 +3,104 @@ import {
   getAllUtms,
   getShortUrlClickCount,
   deleteShortUrl,
-  createUtm,
+  createUTM,
   deleteUtm,
   createExcelFile,
   createCSVFile,
 } from './utm.module';
 import fs from 'fs';
+import { UTM } from './utm.types';
 
-// const __dirname = path.resolve();
+// 전체 UTM 가져오기.
+export async function getAllUtmsCtr (ctx: Context, next: Next) {
+  const { userId } = ctx.state.user;
+  const dateFixResult = await getAllUtms(userId) as Array<UTM> | null;
 
-export async function getAllUtmsController (ctx: Context, next: Next) {
-  const { user_id } = ctx.state.user;
-  const dateFixResult = await getAllUtms(user_id);
-  const result = await Promise.all(
-    dateFixResult.map(async (doc: Utms) => {
-      const click_count = await getShortUrlClickCount(doc.short_id);
-      return {
-        utm_id : doc.utm_id,
-        utm_url : doc.utm_url,
-        utm_campaign_id : doc.utm_campaign_id,
-        utm_campaign_name : doc.utm_campaign_name,
-        utm_content : doc.utm_content,
-        utm_term : doc.utm_term,
-        utm_memo : doc.utm_memo,
-        full_url : doc.full_url,
-        shorten_url : doc.shorten_url,
-        click_count,
-        utm_medium_name : doc.user_utm_medium_id,
-        utm_source_name : doc.user_utm_source_id,
-        created_at_filter : new Date(doc.createdAt).toISOString().slice(0, 10),
-      };
-    })
-  );
-  ctx.status = 200;
-  ctx.response.body = {
-    success : true,
-    data : result,
-  };
+  if (dateFixResult) {
+    const result = await Promise.all(
+      dateFixResult.map(async (doc: UTM) => {
+        const clickCount = await getShortUrlClickCount(doc.shortId);
+        return {
+          _id : doc._id.toString(),
+          url : doc.url,
+          campaignId : doc.campaignId,
+          campaignName : doc.campaignName,
+          content : doc.content,
+          term : doc.term,
+          memo : doc.memo,
+          fullUrl : doc.fullUrl,
+          shortenUrl : doc.shortenUrl,
+          clickCount,
+          createdAt : new Date(doc.createdAt).toISOString().slice(0, 10),
+        };
+      })
+    );
+    ctx.response.body = {
+      result : { success : true, message : '' },
+      data : result,
+    };
+  } else {
+    ctx.response.body = {
+      result : { success : false, message : '' },
+      data : [],
+    };
+  }
+
   await next();
 }
 
-export async function createUtmController (ctx: Context, next: Next) {
-  const { user_id } = ctx.state.user;
-  const requirements = ['utm_source', 'utm_medium', 'utm_campaign_name', 'utm_url'];
+// UTM 생성하기.
+export async function createUtmCtr (ctx: Context, next: Next) {
+  const { userId } = ctx.state.user;
   const utmsData = ctx.request.body.data;
-
-  // requirements Validation.
-  Object.keys(ctx.request.body).forEach(key => {
-    if (!ctx.request.body[key] && requirements.includes(key)) {
-      throw new Error(`Invalid ${key} value.`);
-    }
-  });
 
   // map 이 전부 끝날때까지 대기.
   const result = await Promise.all(
-    utmsData.map(async (doc: Utms) => {
-      try {
-        const result = await createUtm(user_id, doc);
-        // 성공 시 생성된 객체의 데이터 return
-        return {
-          utm_id : result.utm_id,
-          full_url : result.full_url,
-          shorten_url : result.shorten_url,
-        };
-      } catch (err) {
-        console.error(err);
-        // 실패 시 에러 객체 return
-        return {
-          error : true,
-          message : err.message,
-          stack : err.stack,
-        };
-      }
+    utmsData.map(async (doc: UTM) => {
+      await createUTM(userId, doc);
+      // 성공 시 생성된 객체의 데이터 return
+      return {
+        utmId : doc._id.toString(),
+        fullUrl : doc.fullUrl,
+        shortenUrl : doc.shortenUrl,
+      };
     })
   );
 
-  // 에러 객체 여부 확인 후 존재하면 status 500 으로 response
-  const hasError = result.some(item => item.error);
-
-  ctx.assert(!hasError, 400, result);
   ctx.response.body = {
-    success : true,
+    result : { success : true, message : '' },
     data : result,
   };
   await next();
 }
 
-export async function deleteUtmController (ctx: Context, next: Next) {
+// UTM 삭제하기.
+export async function deleteUtmCtr (ctx: Context, next: Next) {
   const deleteData = ctx.request.body.data;
-  const result = await Promise.all(
-    deleteData.map(async (utm: Utms) => {
-      try {
-        const result = await deleteUtm(utm.utm_id);
-        await deleteShortUrl(utm.shorten_url);
-        return result;
-      } catch (err) {
-        console.error(err);
-        return {
-          error : true,
-          message : err.message,
-          stack : err.stack,
-        };
-      }
+  await Promise.all(
+    deleteData.map(async (doc: UTM) => {
+      await deleteUtm(doc._id);
+      await deleteShortUrl(doc.shortenUrl);
     })
   );
 
-  const hasError = result.some(item => item.error);
-
-  ctx.assert(!hasError, 400, result);
   ctx.response.body = {
-    success : true,
-    data : 'delete successfully.',
+    result : { success : true, message : '' },
+    data : {},
   };
   await next();
 }
 
-export async function exportExcelFileController (ctx: Context, next: Next) {
-  const { user_id } = ctx.state.user;
+// Excel file 추출하기.
+export async function exportExcelFileCtr (ctx: Context, next: Next) {
+  const { userId } = ctx.state.user;
   const checkDataId = ctx.request.body.data;
-  const filename = `${user_id}-${new Date(Date.now()).toISOString().slice(0, 10)}`;
+  const filename = `${userId}-${new Date(Date.now()).toISOString().slice(0, 10)}`;
   await createExcelFile(filename, checkDataId);
   ctx.response.attachment(`./temp/${filename}.xlsx`);
   ctx.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   ctx.response.body = {
-    success : true,
+    result : { success : true, message : '' },
     data : `./temp/${filename}.xlsx`,
   };
   // eslint-disable-next-line promise/prefer-await-to-callbacks
@@ -138,43 +112,51 @@ export async function exportExcelFileController (ctx: Context, next: Next) {
   await next();
 }
 
-export async function exportCSVFileController (ctx: Context, next: Next) {
-  const { user_id } = ctx.state.user;
+// CSV file 추출하기.
+export async function exportCSVFileCtr (ctx: Context, next: Next) {
+  const { userId } = ctx.state.user;
   const checkDataId = ctx.request.body.data;
-  const filename = `${user_id}-csv-${new Date(Date.now()).toISOString().slice(0, 10)}`;
+  const filename = `${userId}-csv-${new Date(Date.now()).toISOString().slice(0, 10)}`;
   const csvData = await createCSVFile(checkDataId);
   ctx.response.set({
     'Content-Type' : 'text/csv',
     'Content-Disposition' : `attachment; filename="${filename}.csv"`,
   });
-  ctx.response.body = csvData;
+  ctx.response.body = {
+    result : { success : true, message : '' },
+    data : csvData,
+  };
   await next();
 }
 
-export async function getExternalUtmController (ctx: Context, next: Next) {
-  const { utm_url, created_at, memo } = ctx.request.body.data;
+// 외부 UTM 추가하기.
+export async function getExternalUtmCtr (ctx: Context, next: Next) {
+  const { userId } = ctx.state.user;
+  const { url, createdAt, memo } = ctx.request.body.data;
   const doc: { [k: string]: string } = {
-    created_at,
+    createdAt,
     utm_memo : memo,
   };
 
-  const [baseUrl, utmResources] = utm_url.split('?');
-  doc['utm_url'] = baseUrl;
+  const [baseUrl, utmResources] = url.split('?');
+  doc['url'] = baseUrl;
   const splitResources = utmResources.split('&');
 
   splitResources.forEach((data: string) => {
     const [utmType, utmValue] = data.split('=');
     if (utmType === 'utm_campaign') {
-      doc['utm_campaign_name'] = utmValue;
-    } else if (utmType.includes('utm')) {
-      doc[utmType] = utmValue;
+      doc['campaignName'] = utmValue;
+    } else if (utmType.includes('utm_term')) {
+      doc['term'] = utmValue;
+    } else if (utmType.includes('utm_content')) {
+      doc['content'] = utmValue;
     }
   });
 
-  const result = await createUtm(ctx.state.user.user_id, doc);
+  await createUTM(userId, doc);
   ctx.response.body = {
-    success : true,
-    data : result,
+    result : { success : true, message : '' },
+    data : {},
   };
   await next();
 }
