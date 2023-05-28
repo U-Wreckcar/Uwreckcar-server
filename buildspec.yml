@@ -21,9 +21,6 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
-  cache:
-    paths:
-      - 'node_modules/**/*'
   artifacts:
     files:
       - '**/*'
