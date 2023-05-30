@@ -1,6 +1,6 @@
 branch-defaults:
   dev:
-    environment: null
+    environment: uwreckcar-env
     group_suffix: null
 deploy:
   artifact: build/Uwreckcar-server.zip
