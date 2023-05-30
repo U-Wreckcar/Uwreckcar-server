@@ -6,7 +6,7 @@ export default async (ctx: Context, next: Next) => {
     await next();
   } catch (err) {
     if (err instanceof Error) {
-      await Slack(err.message, err.stack!);
+      await Slack(`Error API path : ${ctx.request.path}`, err.stack!);
       ctx.status = 400;
       ctx.response.body = {
         result : { success : false, message : err.message },
