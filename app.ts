@@ -13,7 +13,7 @@ if (process.env.NODE_ENV === 'production') {
   throw new Error('Not defined process.env.NODE_ENV');
 }
 
-import Koa from 'koa';
+import Koa, { Context, Next } from 'koa';
 import { koaBody } from 'koa-body';
 import errorHandler from './src/util/error.handler';
 import cors from '@koa/cors';
@@ -43,6 +43,10 @@ app.use(errorHandler);
 
 app.use(userRouter.routes()).use(userRouter.prefix('/api/users').allowedMethods());
 app.use(utmRouter.routes()).use(utmRouter.prefix('/api/utms').allowedMethods());
+app.use(async (ctx: Context, next: Next) => {
+  ctx.response.body = 'uwreckcar';
+  await next();
+});
 
 app.on('error', (err: Error) => {
   console.error('Error Listener : ', err);
