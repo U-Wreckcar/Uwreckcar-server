@@ -1,0 +1,24 @@
+branch-defaults:
+  dev:
+    environment: uwreckcar-env
+    group_suffix: null
+deploy:
+  artifact: build/Uwreckcar-server.zip
+environment-defaults:
+  uwreckcar-env:
+    branch: null
+    repository: null
+global:
+  application_name: uwreckcar-env
+  branch: null
+  default_ec2_keyname: uwreckcar
+  default_platform: Node.js 16 running on 64bit Amazon Linux 2
+  default_region: ap-northeast-2
+  include_git_submodules: true
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: default
+  repository: null
+  sc: git
+  workspace_type: Application

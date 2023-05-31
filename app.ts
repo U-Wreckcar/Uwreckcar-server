@@ -13,11 +13,36 @@ if (process.env.NODE_ENV === 'production') {
   throw new Error('Not defined process.env.NODE_ENV');
 }
 
-import Koa from 'koa';
+import Koa, { Context, Next } from 'koa';
 import { koaBody } from 'koa-body';
+import errorHandler from './src/util/error.handler';
+import cors from '@koa/cors';
+import dbRun from './src/config/mongo.config';
+import session from 'koa-session';
+import { userRouter } from './src/user/user.routes';
+import { utmRouter } from './src/utm/utm.routes';
+
+const { PORT, SESSION_SECRET_KEY } = process.env;
 
 const app = new Koa();
 
-app.use(koaBody());
+// mongoDB connection.
+(async () => dbRun())();
 
-app.listen(process.env.PORT, () => console.log(`Server is running on port ${process.env.PORT}`));
+app.use(cors());
+
+// @ts-ignore
+app.keys = [SESSION_SECRET_KEY];
+app.use(session(app));
+
+app.use(koaBody());
+app.use(errorHandler);
+
+app.use(userRouter.routes()).use(userRouter.prefix('/api/users').allowedMethods());
+app.use(utmRouter.routes()).use(utmRouter.prefix('/api/utms').allowedMethods());
+
+app.on('error', (err: Error) => {
+  console.error('Error Listener : ', err);
+});
+
+app.listen(process.env.PORT, () => console.log(`Server is running on port ${PORT}`));
