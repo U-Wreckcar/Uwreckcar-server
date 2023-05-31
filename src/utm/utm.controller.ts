@@ -12,8 +12,8 @@ import { UTM } from './utm.types';
 
 // 전체 UTM 가져오기.
 export async function getAllUtmsCtr (ctx: Context, next: Next) {
-  const { userId } = ctx.state.user;
-  const dateFixResult = await getAllUtms(userId) as Array<UTM> | null;
+  const { _id } = ctx.state.user;
+  const dateFixResult = await getAllUtms(_id.toString()) as Array<UTM> | null;
 
   if (dateFixResult) {
     const result = await Promise.all(
@@ -51,13 +51,13 @@ export async function getAllUtmsCtr (ctx: Context, next: Next) {
 
 // UTM 생성하기.
 export async function createUtmCtr (ctx: Context, next: Next) {
-  const { userId } = ctx.state.user;
+  const { _id } = ctx.state.user;
   const utmsData = ctx.request.body.data;
 
   // map 이 전부 끝날때까지 대기.
   const result = await Promise.all(
     utmsData.map(async (doc: UTM) => {
-      return await createUTM(userId, doc);
+      return await createUTM(_id.toString(), doc);
     })
   );
 
@@ -87,9 +87,9 @@ export async function deleteUtmCtr (ctx: Context, next: Next) {
 
 // Excel file 추출하기.
 export async function exportExcelFileCtr (ctx: Context, next: Next) {
-  const { userId } = ctx.state.user;
+  const { _id } = ctx.state.user;
   const checkDataId = ctx.request.body.data;
-  const filename = `${userId}-${new Date(Date.now()).toISOString().slice(0, 10)}`;
+  const filename = `${_id.toString()}-${new Date(Date.now()).toISOString().slice(0, 10)}`;
   await createExcelFile(filename, checkDataId);
   ctx.response.attachment(`./temp/${filename}.xlsx`);
   ctx.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -108,9 +108,9 @@ export async function exportExcelFileCtr (ctx: Context, next: Next) {
 
 // CSV file 추출하기.
 export async function exportCSVFileCtr (ctx: Context, next: Next) {
-  const { userId } = ctx.state.user;
+  const { _id } = ctx.state.user;
   const checkDataId = ctx.request.body.data;
-  const filename = `${userId}-csv-${new Date(Date.now()).toISOString().slice(0, 10)}`;
+  const filename = `${_id.toString()}-csv-${new Date(Date.now()).toISOString().slice(0, 10)}`;
   const csvData = await createCSVFile(checkDataId);
   ctx.response.set({
     'Content-Type' : 'text/csv',
@@ -125,7 +125,7 @@ export async function exportCSVFileCtr (ctx: Context, next: Next) {
 
 // 외부 UTM 추가하기.
 export async function getExternalUtmCtr (ctx: Context, next: Next) {
-  const { userId } = ctx.state.user;
+  const { _id } = ctx.state.user;
   const { url, createdAt, memo } = ctx.request.body.data;
   const doc: { [k: string]: string } = {
     createdAt,
@@ -147,7 +147,7 @@ export async function getExternalUtmCtr (ctx: Context, next: Next) {
     }
   });
 
-  await createUTM(userId, doc);
+  await createUTM(_id.toString(), doc);
   ctx.response.body = {
     result : { success : true, message : '' },
     data : {},

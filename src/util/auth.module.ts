@@ -118,9 +118,6 @@ export async function authentication (ctx: CustomContext & Context, next: Next)
       // }
       break;
     case 'uwreckcar': {
-      // const valifyToken = jwtService.validateRefreshToken(token);
-      // ctx.assert(valifyToken, 401, 'Invalid token');
-
       const userData = jwtService.getTokenPayload(tokenValue);
 
       ctx.state.user = userData;

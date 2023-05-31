@@ -29,10 +29,7 @@ const app = new Koa();
 // mongoDB connection.
 (async () => dbRun())();
 
-app.use(cors({
-  origin : '*',
-  credentials : true,
-}));
+app.use(cors());
 
 // @ts-ignore
 app.keys = [SESSION_SECRET_KEY];
@@ -43,10 +40,6 @@ app.use(errorHandler);
 
 app.use(userRouter.routes()).use(userRouter.prefix('/api/users').allowedMethods());
 app.use(utmRouter.routes()).use(utmRouter.prefix('/api/utms').allowedMethods());
-app.use(async (ctx: Context, next: Next) => {
-  ctx.response.body = 'uwreckcar';
-  await next();
-});
 
 app.on('error', (err: Error) => {
   console.error('Error Listener : ', err);

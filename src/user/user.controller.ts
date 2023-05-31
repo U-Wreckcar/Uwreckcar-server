@@ -11,15 +11,15 @@ import { verifyAccountToEmail } from '../util/nodemailer.module';
 
 // 회원 탈퇴하기.
 export async function withdrawCtr (ctx: Context, next: Next) {
-  const { userId } = ctx.state.user;
+  const { _id } = ctx.state.user;
   const { reason } = ctx.request.body.data;
-  const allUtms = await getAllUtms(userId);
+  const allUtms = await getAllUtms(_id.toString());
 
   const allShortenUrl = allUtms.map(utm => utm.shortId);
 
   allShortenUrl.forEach(shortId => deleteShortUrl(shortId));
   await recordWithdrawReason(reason);
-  await deleteUserInfo(userId);
+  await deleteUserInfo(_id.toString());
   ctx.status = 200;
   ctx.response.body = {
     result : { success : true, message : '' },
@@ -31,7 +31,7 @@ export async function withdrawCtr (ctx: Context, next: Next) {
 // 유저 정보 가져오기.
 export async function getUserProfileCtr (ctx: Context, next: Next) {
   const {
-    userId,
+    _id,
     name,
     email,
     profileImg,
@@ -40,7 +40,7 @@ export async function getUserProfileCtr (ctx: Context, next: Next) {
   ctx.response.body = {
     result : { success : true, message : '' },
     data : {
-      userId,
+      userId: _id.toString(),
       name,
       email,
       profileImg,
