@@ -23,12 +23,12 @@ export async function getAllUtmsCtr (ctx: Context, next: Next) {
         return {
           _id : doc._id.toString(),
           url : doc.url,
-          campaignId : decodeURI(doc.campaignId),
-          campaignName : decodeURI(doc.campaignName),
-          medium : decodeURI(doc.medium),
-          source : decodeURI(doc.source),
-          content : decodeURI(doc.content),
-          term : decodeURI(doc.term),
+          campaignId : doc.campaignId,
+          campaignName : doc.campaignName,
+          medium : doc.medium,
+          source : doc.source,
+          content : doc.content,
+          term : doc.term,
           memo : doc.memo,
           fullUrl : doc.fullUrl,
           shortenUrl : doc.shortenUrl,
@@ -153,15 +153,15 @@ export async function getExternalUtmCtr (ctx: Context, next: Next) {
   splitResources.forEach((data: string) => {
     const [utmType, utmValue] = data.split('=');
     if (utmType === 'utm_campaign') {
-      doc['campaignName'] = utmValue;
+      doc['campaignName'] = decodeURI(utmValue.toString());
     } else if (utmType === 'utm_term') {
-      doc['term'] = utmValue;
+      doc['term'] = decodeURI(utmValue.toString());
     } else if (utmType === 'utm_content') {
-      doc['content'] = utmValue;
+      doc['content'] = decodeURI(utmValue.toString());
     } else if (utmType === 'utm_source') {
-      doc['source'] = utmValue;
+      doc['source'] = decodeURI(utmValue.toString());
     } else if (utmType === 'utm_medium') {
-      doc['medium'] = utmValue;
+      doc['medium'] = decodeURI(utmValue.toString());
     }
   });
 

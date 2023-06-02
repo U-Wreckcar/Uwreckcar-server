@@ -35,12 +35,13 @@ export async function createUTM (userId: number, inputVal: any) {
     createdAt,
   } = inputVal;
 
-  let fullUrl = `${url}?utm_source=${source}&utm_medium=${medium}&utm_campaign=${campaignName}`;
+  let fullUrl =
+    `${url}?utm_source=${encodeURI(source)}&utm_medium=${encodeURI(medium)}&utm_campaign=${encodeURI(campaignName)}`;
 
   if (term) {
-    fullUrl += `&utm_term=${term}`;
+    fullUrl += `&utm_term=${encodeURI(term)}`;
   } else if (content) {
-    fullUrl += `&utm_content=${content}`;
+    fullUrl += `&utm_content=${encodeURI(content)}`;
   }
 
   const short_id = nanoid(10);
