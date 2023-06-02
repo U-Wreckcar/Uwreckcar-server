@@ -101,7 +101,6 @@ export async function signinCtr (ctx: Context, next: Next) {
   if (userData !== null) {
     const inputPassword = await getHashedPassword(password, userData.salt) as { password: string, salt: string };
     if (userData.password === inputPassword.password) {
-      userData['userId'] = userData._id.toString();
       const token = jwtService.createAccessToken(userData);
       ctx.response.body = {
         result : { success : true, message : '' },

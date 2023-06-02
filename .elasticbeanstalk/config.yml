@@ -9,8 +9,8 @@ environment-defaults:
     branch: null
     repository: null
 global:
-  application_name: uwreckcar-env
-  branch: null
+  application_name: Uwreckcar
+  branch: dev
   default_ec2_keyname: uwreckcar
   default_platform: Node.js 16 running on 64bit Amazon Linux 2
   default_region: ap-northeast-2
@@ -19,6 +19,6 @@ global:
   platform_name: null
   platform_version: null
   profile: default
-  repository: null
+  repository: uwreckcar
   sc: git
   workspace_type: Application

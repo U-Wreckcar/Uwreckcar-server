@@ -75,8 +75,16 @@ export async function createUTM (userId: number, inputVal: any) {
 }
 
 // UTM 삭제.
-export async function deleteUtm (_id: number) {
+export async function deleteUtm (_id: string) {
   await UtmDB.collection('utms').deleteOne({ _id : new ObjectId(_id) });
+}
+
+export async function updateMemo (_id: string, memo: string) {
+  await UtmDB.collection('utms').findOneAndUpdate({ _id : new ObjectId(_id) }, {
+    $set : {
+      memo,
+    },
+  });
 }
 
 // Excel file 추출하기.
@@ -107,7 +115,8 @@ export async function createExcelFile (filename: string, data: Array<UTM> & ICon
     writeOptions : {}, // Style options from https://docs.sheetjs.com/docs/api/write-options
     RTL : false, // Display the columns from right-to-left (the default value is false)
   };
-  xlsx(sheetData, settings, () => {});
+  xlsx(sheetData, settings, () => {
+  });
 }
 
 // CSV file 추출하기.

@@ -39,7 +39,16 @@ class jwtService {
   };
 
   getTokenPayload = (token: string) => {
-    return jwt.verify(token, JWT_SECRET_KEY as string);
+    try {
+      return jwt.verify(token, JWT_SECRET_KEY as string);
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.message === 'jwt expired') {
+          return jwt.decode(token);
+        }
+        throw new Error(err.message);
+      }
+    }
   };
 
   // Access Token 검증

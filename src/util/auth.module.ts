@@ -1,9 +1,9 @@
-import { Context, DefaultContext, DefaultState, Next } from 'koa';
+import { Context, Next } from 'koa';
 import jwtService from './jwt.module';
 import { JwtPayload } from 'jsonwebtoken';
-import { Middleware } from '@koa/router';
 import axios from 'axios';
 import { getUserData } from '../user/user.module';
+import Router from '@koa/router';
 
 export interface CustomContext extends Context {
   session: any;
@@ -14,10 +14,10 @@ export async function authentication (ctx: CustomContext & Context, next: Next)
   const refreshToken = ctx.headers['x-refresh-token'] as string;
 
   // 세션에 사용자 정보가 있는지 확인하고, 있다면 인증을 건너뛰기 - 매 api 요청마다의 인증 생략
-  if (ctx.session.user) {
-    ctx.state.user = ctx.session.user;
-    return next();
-  }
+  // if (ctx.session.user) {
+  //   ctx.state.user = ctx.session.user;
+  //   return next();
+  // }
 
   const [tokenType, tokenValue] = refreshToken.split(' ');
 
@@ -129,3 +129,8 @@ export async function authentication (ctx: CustomContext & Context, next: Next)
       ctx.throw('Invalid login.');
   }
 }
+
+const router = new Router();
+export const healthRouter = router.get('/', (ctx: Context, next: Next) => {
+  ctx.status = 200;
+});

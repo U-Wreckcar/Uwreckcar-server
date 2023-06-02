@@ -5,7 +5,7 @@ import {
   createUTM,
   deleteUtm,
   createExcelFile,
-  createCSVFile, getShortUrl,
+  createCSVFile, getShortUrl, updateMemo,
 } from './utm.module';
 import fs from 'fs';
 import { UTM } from './utm.types';
@@ -23,10 +23,12 @@ export async function getAllUtmsCtr (ctx: Context, next: Next) {
         return {
           _id : doc._id.toString(),
           url : doc.url,
-          campaignId : doc.campaignId,
-          campaignName : doc.campaignName,
-          content : doc.content,
-          term : doc.term,
+          campaignId : decodeURI(doc.campaignId),
+          campaignName : decodeURI(doc.campaignName),
+          medium : decodeURI(doc.medium),
+          source : decodeURI(doc.source),
+          content : decodeURI(doc.content),
+          term : decodeURI(doc.term),
           memo : doc.memo,
           fullUrl : doc.fullUrl,
           shortenUrl : doc.shortenUrl,
@@ -77,6 +79,18 @@ export async function deleteUtmCtr (ctx: Context, next: Next) {
       await deleteShortUrl(doc.shortenUrl);
     })
   );
+
+  ctx.response.body = {
+    result : { success : true, message : '' },
+    data : {},
+  };
+  await next();
+}
+
+// UTM 메모 수정하기
+export async function updateUtmMemoCtr (ctx: Context, next: Next) {
+  const updateDoc = ctx.request.body.data;
+  await updateMemo(updateDoc._id, updateDoc.memo);
 
   ctx.response.body = {
     result : { success : true, message : '' },
@@ -140,10 +154,14 @@ export async function getExternalUtmCtr (ctx: Context, next: Next) {
     const [utmType, utmValue] = data.split('=');
     if (utmType === 'utm_campaign') {
       doc['campaignName'] = utmValue;
-    } else if (utmType.includes('utm_term')) {
+    } else if (utmType === 'utm_term') {
       doc['term'] = utmValue;
-    } else if (utmType.includes('utm_content')) {
+    } else if (utmType === 'utm_content') {
       doc['content'] = utmValue;
+    } else if (utmType === 'utm_source') {
+      doc['source'] = utmValue;
+    } else if (utmType === 'utm_medium') {
+      doc['medium'] = utmValue;
     }
   });
 

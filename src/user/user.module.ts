@@ -14,8 +14,8 @@ export async function setUserInfo (
 ) {
   await UserDB.collection('userInfo').insertOne({
     name,
-    profile_img :
-      'https://velog.velcdn.com/images/tastekim_/post/60f96a34-2142-43fe-b109-9312af658a3d/image.png',
+    profileImg :
+      'https://velog.velcdn.com/images/tastekim_/post/6c031310-25cf-4f03-80fa-73880d0574f7/image.svg',
     email,
     password,
     salt,

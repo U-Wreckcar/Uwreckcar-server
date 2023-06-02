@@ -21,6 +21,7 @@ import dbRun from './src/config/mongo.config';
 import session from 'koa-session';
 import { userRouter } from './src/user/user.routes';
 import { utmRouter } from './src/utm/utm.routes';
+import { healthRouter } from './src/util/auth.module';
 
 const { PORT, SESSION_SECRET_KEY } = process.env;
 
@@ -38,6 +39,7 @@ app.use(session(app));
 app.use(koaBody());
 app.use(errorHandler);
 
+app.use(healthRouter.routes()).use(healthRouter.allowedMethods());
 app.use(userRouter.routes()).use(userRouter.prefix('/api/users').allowedMethods());
 app.use(utmRouter.routes()).use(utmRouter.prefix('/api/utms').allowedMethods());
 
