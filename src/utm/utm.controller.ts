@@ -151,17 +151,19 @@ export async function getExternalUtmCtr (ctx: Context, next: Next) {
   const splitResources = utmResources.split('&');
 
   splitResources.forEach((data: string) => {
-    const [utmType, utmValue] = data.split('=');
+    const [encodeType, encodeValue] = data.split('=');
+    const utmType = decodeURI(encodeType);
+    const utmValue = decodeURI(encodeValue);
     if (utmType === 'utm_campaign') {
-      doc['campaignName'] = decodeURI(utmValue.toString());
+      doc['campaignName'] = decodeURI(utmValue);
     } else if (utmType === 'utm_term') {
-      doc['term'] = decodeURI(utmValue.toString());
+      doc['term'] = decodeURI(utmValue);
     } else if (utmType === 'utm_content') {
-      doc['content'] = decodeURI(utmValue.toString());
+      doc['content'] = decodeURI(utmValue);
     } else if (utmType === 'utm_source') {
-      doc['source'] = decodeURI(utmValue.toString());
+      doc['source'] = decodeURI(utmValue);
     } else if (utmType === 'utm_medium') {
-      doc['medium'] = decodeURI(utmValue.toString());
+      doc['medium'] = decodeURI(utmValue);
     }
   });
 
