@@ -1,9 +1,11 @@
 import { ShortenUrlDB, UtmDB } from '../config/mongo.config';
 import { nanoid } from 'nanoid';
 import axios from 'axios';
-import xlsx, { IContent, IJsonSheet } from 'json-as-xlsx';
+import jsonToXlsx, { IContent, IJsonSheet } from 'json-as-xlsx';
+import xlsx from 'xlsx';
 import { ObjectId } from 'bson';
 import { ShortenUrl, UTM } from './utm.types';
+import formidable from 'formidable';
 
 // UTM 전체 조회
 export async function getAllUtms (userId: string) {
@@ -22,7 +24,7 @@ export async function getShortUrl (shortId: string) {
 }
 
 // UTM data 생성
-export async function createUTM (userId: number, inputVal: any) {
+export async function createUTM (userId: string, inputVal: any) {
   const {
     url,
     campaignId,
@@ -116,7 +118,7 @@ export async function createExcelFile (filename: string, data: Array<UTM> & ICon
     writeOptions : {}, // Style options from https://docs.sheetjs.com/docs/api/write-options
     RTL : false, // Display the columns from right-to-left (the default value is false)
   };
-  xlsx(sheetData, settings, () => {
+  jsonToXlsx(sheetData, settings, () => {
   });
 }
 
@@ -137,4 +139,42 @@ export async function createCSVFile (data: Array<UTM>) {
   });
 
   return csvData;
+}
+
+// excel file parser
+export function parseExcel (file: any) {
+  const workbook = xlsx.readFile(file.filepath);
+  const sheet_name_list = workbook.SheetNames;
+  const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+  return data;
+}
+
+// split full url parser
+export function parseFullUrl (url: string, memo: string, createdAt: string) {
+  const doc: { [k: string]: string } = {
+    createdAt,
+    memo,
+  };
+
+  const [baseUrl, utmResources] = url.split('?');
+  doc['url'] = baseUrl;
+  const splitResources = utmResources.split('&');
+
+  splitResources.forEach((data: string) => {
+    const [encodeType, encodeValue] = data.split('=');
+    const utmType = decodeURI(encodeType);
+    const utmValue = decodeURI(encodeValue);
+    if (utmType === 'utm_campaign') {
+      doc['campaignName'] = decodeURI(utmValue);
+    } else if (utmType === 'utm_term') {
+      doc['term'] = decodeURI(utmValue);
+    } else if (utmType === 'utm_content') {
+      doc['content'] = decodeURI(utmValue);
+    } else if (utmType === 'utm_source') {
+      doc['source'] = decodeURI(utmValue);
+    } else if (utmType === 'utm_medium') {
+      doc['medium'] = decodeURI(utmValue);
+    }
+  });
+  return doc;
 }

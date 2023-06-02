@@ -36,7 +36,9 @@ app.use(cors());
 app.keys = [SESSION_SECRET_KEY];
 app.use(session(app));
 
-app.use(koaBody());
+app.use(koaBody({
+  multipart : true,
+}));
 app.use(errorHandler);
 
 app.use(healthRouter.routes()).use(healthRouter.allowedMethods());

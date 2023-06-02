@@ -5,7 +5,7 @@ import {
   createUTM,
   deleteUtm,
   createExcelFile,
-  createCSVFile, getShortUrl, updateMemo,
+  createCSVFile, getShortUrl, updateMemo, parseExcel, parseFullUrl,
 } from './utm.module';
 import fs from 'fs';
 import { UTM } from './utm.types';
@@ -141,36 +141,115 @@ export async function exportCSVFileCtr (ctx: Context, next: Next) {
 export async function getExternalUtmCtr (ctx: Context, next: Next) {
   const { _id } = ctx.state.user;
   const { url, createdAt, memo } = ctx.request.body.data;
-  const doc: { [k: string]: string } = {
-    createdAt,
-    utm_memo : memo,
-  };
 
-  const [baseUrl, utmResources] = url.split('?');
-  doc['url'] = baseUrl;
-  const splitResources = utmResources.split('&');
-
-  splitResources.forEach((data: string) => {
-    const [encodeType, encodeValue] = data.split('=');
-    const utmType = decodeURI(encodeType);
-    const utmValue = decodeURI(encodeValue);
-    if (utmType === 'utm_campaign') {
-      doc['campaignName'] = decodeURI(utmValue);
-    } else if (utmType === 'utm_term') {
-      doc['term'] = decodeURI(utmValue);
-    } else if (utmType === 'utm_content') {
-      doc['content'] = decodeURI(utmValue);
-    } else if (utmType === 'utm_source') {
-      doc['source'] = decodeURI(utmValue);
-    } else if (utmType === 'utm_medium') {
-      doc['medium'] = decodeURI(utmValue);
-    }
-  });
+  const doc = parseFullUrl(url, memo, createdAt);
+  // const doc: { [k: string]: string } = {
+  //   createdAt,
+  //   utm_memo : memo,
+  // };
+  //
+  // const [baseUrl, utmResources] = url.split('?');
+  // doc['url'] = baseUrl;
+  // const splitResources = utmResources.split('&');
+  //
+  // splitResources.forEach((data: string) => {
+  //   const [encodeType, encodeValue] = data.split('=');
+  //   const utmType = decodeURI(encodeType);
+  //   const utmValue = decodeURI(encodeValue);
+  //   if (utmType === 'utm_campaign') {
+  //     doc['campaignName'] = decodeURI(utmValue);
+  //   } else if (utmType === 'utm_term') {
+  //     doc['term'] = decodeURI(utmValue);
+  //   } else if (utmType === 'utm_content') {
+  //     doc['content'] = decodeURI(utmValue);
+  //   } else if (utmType === 'utm_source') {
+  //     doc['source'] = decodeURI(utmValue);
+  //   } else if (utmType === 'utm_medium') {
+  //     doc['medium'] = decodeURI(utmValue);
+  //   }
+  // });
 
   await createUTM(_id.toString(), doc);
   ctx.response.body = {
     result : { success : true, message : '' },
     data : {},
   };
+  await next();
+}
+
+// 외부 UTM 대량 추가하기.
+export async function importExcelFile (ctx: Context, next: Next) {
+  const { files } = ctx.request.files!;
+  const { _id } = ctx.state.user;
+
+  const parseData: Array<any> = parseExcel(files);
+
+  // 빈값으로 줄 때
+  for (let i = 0; i < parseData.length; i++) {
+    if (parseData[i].created_at === undefined) {
+      parseData[i].created_at = new Date(Date.now()).toISOString().slice(0, 10);
+    }
+    if (parseData[i].utm_memo === undefined) {
+      parseData[i].utm_memo = '-';
+    }
+  }
+
+  // 템플릿 유효한지 확인
+  const hasKey = parseData.some(data => {
+    return Object.keys(data).some(key => !['created_at', 'utm_memo', 'full_url'].includes(key)
+    );
+  });
+
+  if (hasKey) {
+    ctx.response.body = {
+      result : { success : false, message : 'Includes invalid column key' },
+      data : {},
+    };
+    return next();
+  }
+
+  const dateRegexp = /^\d{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/;
+  const urlRegexp = /^https:\/\//;
+
+  // 입력값 유효한지 확인
+  for (let i = 0; i < parseData.length; i++) {
+    if (!dateRegexp.test(parseData[i].created_at)) {
+      ctx.response.body = {
+        result : { success : false, message : `invalid date value "${parseData[i].created_at}"` },
+        data : {},
+      };
+      return next();
+    }
+    if (!urlRegexp.test(parseData[i].full_url)) {
+      ctx.response.body = {
+        result : { success : false, message : `invalid value "${parseData[i].full_url}"` },
+        data : {},
+      };
+      return next();
+    }
+  }
+
+  const processDataForDB = parseData.map(doc => {
+    return parseFullUrl(doc.full_url, doc.utm_memo, doc.created_at);
+  });
+
+  const pendingResult = processDataForDB.map(async doc => {
+    await createUTM(_id.toString(), doc);
+    return true;
+  });
+
+  const hasError = pendingResult.some(item => !item);
+
+  if (hasError) {
+    ctx.response.body = {
+      result : { success : false, message : 'few data failed' },
+      data : {},
+    };
+  } else {
+    ctx.response.body = {
+      result : { success : true, message : '' },
+      data : {},
+    };
+  }
   await next();
 }
