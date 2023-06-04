@@ -105,8 +105,8 @@ export async function exportExcelFileCtr (ctx: Context, next: Next) {
   const checkDataId = ctx.request.body.data;
   const filename = `${_id.toString()}-${new Date(Date.now()).toISOString().slice(0, 10)}`;
   await createExcelFile(filename, checkDataId);
+  ctx.response.set({ 'Content-Type' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   ctx.response.attachment(`./temp/${filename}.xlsx`);
-  ctx.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   ctx.response.body = {
     result : { success : true, message : '' },
     data : `./temp/${filename}.xlsx`,
@@ -126,6 +126,7 @@ export async function exportCSVFileCtr (ctx: Context, next: Next) {
   const checkDataId = ctx.request.body.data;
   const filename = `${_id.toString()}-csv-${new Date(Date.now()).toISOString().slice(0, 10)}`;
   const csvData = await createCSVFile(checkDataId);
+  console.log(csvData);
   ctx.response.set({
     'Content-Type' : 'text/csv',
     'Content-Disposition' : `attachment; filename="${filename}.csv"`,
