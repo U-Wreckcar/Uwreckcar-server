@@ -4,11 +4,12 @@ import {
   deleteShortUrl,
   createUTM,
   deleteUtm,
-  createExcelFile,
-  createCSVFile, getShortUrl, updateMemo, parseExcel, parseFullUrl,
+  getShortUrl, updateMemo,
 } from './utm.module';
+import { createExcelFile, createCSVFile, parseExcel, parseFullUrl } from './utm.service';
 import fs from 'fs';
 import { UTM } from './utm.types';
+import { responseBody } from '../util/api.helper';
 
 // 전체 UTM 가져오기.
 export async function getAllUtmsCtr (ctx: Context, next: Next) {
@@ -37,15 +38,9 @@ export async function getAllUtmsCtr (ctx: Context, next: Next) {
         };
       })
     );
-    ctx.response.body = {
-      result : { success : true, message : '' },
-      data : result,
-    };
+    ctx.response.body = responseBody(true, '', result);
   } else {
-    ctx.response.body = {
-      result : { success : false, message : '' },
-      data : [],
-    };
+    ctx.response.body = responseBody(false, '', []);
   }
 
   await next();
@@ -63,10 +58,7 @@ export async function createUtmCtr (ctx: Context, next: Next) {
     })
   );
 
-  ctx.response.body = {
-    result : { success : true, message : '' },
-    data : result,
-  };
+  ctx.response.body = responseBody(true, '', result);
   await next();
 }
 
@@ -80,10 +72,7 @@ export async function deleteUtmCtr (ctx: Context, next: Next) {
     })
   );
 
-  ctx.response.body = {
-    result : { success : true, message : '' },
-    data : {},
-  };
+  ctx.response.body = responseBody(true, '', {});
   await next();
 }
 
@@ -92,10 +81,7 @@ export async function updateUtmMemoCtr (ctx: Context, next: Next) {
   const updateDoc = ctx.request.body.data;
   await updateMemo(updateDoc._id, updateDoc.memo);
 
-  ctx.response.body = {
-    result : { success : true, message : '' },
-    data : {},
-  };
+  ctx.response.body = responseBody(true, '', {});
   await next();
 }
 
@@ -107,10 +93,8 @@ export async function exportExcelFileCtr (ctx: Context, next: Next) {
   await createExcelFile(filename, checkDataId);
   ctx.response.set({ 'Content-Type' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   ctx.response.attachment(`./temp/${filename}.xlsx`);
-  ctx.response.body = {
-    result : { success : true, message : '' },
-    data : `./temp/${filename}.xlsx`,
-  };
+  ctx.response.body = responseBody(true, '', `./temp/${filename}.xlsx`);
+
   // eslint-disable-next-line promise/prefer-await-to-callbacks
   fs.unlink(`./temp/${filename}.xlsx`, err => {
     if (err) {
@@ -126,15 +110,12 @@ export async function exportCSVFileCtr (ctx: Context, next: Next) {
   const checkDataId = ctx.request.body.data;
   const filename = `${_id.toString()}-csv-${new Date(Date.now()).toISOString().slice(0, 10)}`;
   const csvData = await createCSVFile(checkDataId);
-  console.log(csvData);
+
   ctx.response.set({
     'Content-Type' : 'text/csv',
     'Content-Disposition' : `attachment; filename="${filename}.csv"`,
   });
-  ctx.response.body = {
-    result : { success : true, message : '' },
-    data : csvData,
-  };
+  ctx.response.body = responseBody(true, '', csvData);
   await next();
 }
 
@@ -144,37 +125,9 @@ export async function getExternalUtmCtr (ctx: Context, next: Next) {
   const { url, createdAt, memo } = ctx.request.body.data;
 
   const doc = parseFullUrl(url, memo, createdAt);
-  // const doc: { [k: string]: string } = {
-  //   createdAt,
-  //   utm_memo : memo,
-  // };
-  //
-  // const [baseUrl, utmResources] = url.split('?');
-  // doc['url'] = baseUrl;
-  // const splitResources = utmResources.split('&');
-  //
-  // splitResources.forEach((data: string) => {
-  //   const [encodeType, encodeValue] = data.split('=');
-  //   const utmType = decodeURI(encodeType);
-  //   const utmValue = decodeURI(encodeValue);
-  //   if (utmType === 'utm_campaign') {
-  //     doc['campaignName'] = decodeURI(utmValue);
-  //   } else if (utmType === 'utm_term') {
-  //     doc['term'] = decodeURI(utmValue);
-  //   } else if (utmType === 'utm_content') {
-  //     doc['content'] = decodeURI(utmValue);
-  //   } else if (utmType === 'utm_source') {
-  //     doc['source'] = decodeURI(utmValue);
-  //   } else if (utmType === 'utm_medium') {
-  //     doc['medium'] = decodeURI(utmValue);
-  //   }
-  // });
 
   await createUTM(_id.toString(), doc);
-  ctx.response.body = {
-    result : { success : true, message : '' },
-    data : {},
-  };
+  ctx.response.body = responseBody(true, '', {});
   await next();
 }
 
@@ -202,30 +155,21 @@ export async function importExcelFile (ctx: Context, next: Next) {
   });
 
   if (hasKey) {
-    ctx.response.body = {
-      result : { success : false, message : 'Includes invalid column key' },
-      data : {},
-    };
+    ctx.response.body = responseBody(false, 'Includes invalid column key', {});
     return next();
   }
 
-  const dateRegexp = /^\d{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/;
+  const dateRegexp = /^\d{4}-(0[1-9]|1[012])-(0[1-9]|[12]\d|3[01])$/;
   const urlRegexp = /^https:\/\//;
 
   // 입력값 유효한지 확인
   for (let i = 0; i < parseData.length; i++) {
     if (!dateRegexp.test(parseData[i].created_at)) {
-      ctx.response.body = {
-        result : { success : false, message : `invalid date value "${parseData[i].created_at}"` },
-        data : {},
-      };
+      ctx.response.body = responseBody(false, `invalid date value "${parseData[i].created_at}"`, {});
       return next();
     }
     if (!urlRegexp.test(parseData[i].full_url)) {
-      ctx.response.body = {
-        result : { success : false, message : `invalid value "${parseData[i].full_url}"` },
-        data : {},
-      };
+      ctx.response.body = responseBody(false, `invalid date value "${parseData[i].created_at}"`, {});
       return next();
     }
   }
@@ -242,15 +186,9 @@ export async function importExcelFile (ctx: Context, next: Next) {
   const hasError = pendingResult.some(item => !item);
 
   if (hasError) {
-    ctx.response.body = {
-      result : { success : false, message : 'few data failed' },
-      data : {},
-    };
+    ctx.response.body = responseBody(false, 'few data failed', {});
   } else {
-    ctx.response.body = {
-      result : { success : true, message : '' },
-      data : {},
-    };
+    ctx.response.body = responseBody(true, '', {});
   }
   await next();
 }

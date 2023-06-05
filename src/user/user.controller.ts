@@ -8,6 +8,7 @@ import {
   getHashedPassword, getUserData, setUserInfo,
 } from './user.module';
 import { verifyAccountToEmail } from '../util/nodemailer.module';
+import { responseBody } from '../util/api.helper';
 
 // 회원 탈퇴하기.
 export async function withdrawCtr (ctx: Context, next: Next) {
@@ -37,16 +38,13 @@ export async function getUserProfileCtr (ctx: Context, next: Next) {
     profileImg,
     company,
   } = ctx.state.user;
-  ctx.response.body = {
-    result : { success : true, message : '' },
-    data : {
-      userId: _id.toString(),
-      name,
-      email,
-      profileImg,
-      company,
-    },
-  };
+  ctx.response.body = responseBody(true, '', {
+    userId : _id.toString(),
+    name,
+    email,
+    profileImg,
+    company,
+  });
   await next();
 }
 
@@ -55,19 +53,13 @@ export async function sendEmailCtr (ctx: Context & CustomContext, next: Next) {
   const { email } = ctx.request.body.data;
   const dupCheck = await getUserData(email);
   if (dupCheck !== null) {
-    ctx.response.body = {
-      result : { success : false, message : `${email} is already exists.` },
-      data : {},
-    };
+    ctx.response.body = responseBody(false, `${email} is already exists.`, {});
   } else {
     const verificationCode = nanoid(6);
     ctx.session.verifyCode = verificationCode;
     await verifyAccountToEmail(email, verificationCode);
 
-    ctx.response.body = {
-      result : { success : true, message : '' },
-      data : {},
-    };
+    ctx.response.body = responseBody(true, '', {});
   }
 
   await next();
@@ -79,15 +71,9 @@ export async function validateEmailCtr (ctx: Context & CustomContext, next: Next
   const { verifyCode } = ctx.session;
 
   if (verifyCode === verificationCode) {
-    ctx.response.body = {
-      result : { success : true, message : '' },
-      data : {},
-    };
+    ctx.response.body = responseBody(true, '', {});
   } else {
-    ctx.response.body = {
-      result : { success : false, message : 'Invalid verifyCode' },
-      data : {},
-    };
+    ctx.response.body = responseBody(false, 'Invalid verifyCode', {});
   }
   await next();
 }
@@ -118,17 +104,11 @@ export async function signinCtr (ctx: Context, next: Next) {
       };
     } else {
       // 비밀번호가 틀렸을 때.
-      ctx.response.body = {
-        result : { success : false, message : 'Invalid password.' },
-        data : {},
-      };
+      ctx.response.body = responseBody(false, 'Invalid password.', {});
     }
   } else {
     // 유저 정보가 null 일 때.
-    ctx.response.body = {
-      result : { success : false, message : `Couldn't find user ${email}` },
-      data : {},
-    };
+    ctx.response.body = responseBody(false, `Couldn't find user ${email}`, {});
   }
   await next();
 }
@@ -145,10 +125,7 @@ export async function signupCtr (ctx: Context, next: Next) {
 
   const dupData = await getUserData(email);
   if (dupData) {
-    ctx.response.body = {
-      result : { success : false, message : `${email} is already exist.` },
-      data : {},
-    };
+    ctx.response.body = responseBody(false, `${email} is already exist.`, {});
   } else {
     const hashPassword = await createHashedPassword(password) as { password: string, salt: string };
     await setUserInfo(
@@ -159,10 +136,7 @@ export async function signupCtr (ctx: Context, next: Next) {
       company,
       isMarketing
     );
-    ctx.response.body = {
-      result : { success : true, message : '' },
-      data : {},
-    };
+    ctx.response.body = responseBody(true, '', {});
   }
 
   await next();
