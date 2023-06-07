@@ -51,6 +51,11 @@ export async function createUtmCtr (ctx: Context, next: Next) {
   const { _id } = ctx.state.user;
   const utmsData = ctx.request.body.data;
 
+  if (!utmsData || !Array.isArray(utmsData)) {
+    ctx.response.body = responseBody(false, 'Body is not Array.', {});
+    return next();
+  }
+
   // map 이 전부 끝날때까지 대기.
   const result = await Promise.all(
     utmsData.map(async (doc: UTM) => {

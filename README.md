@@ -9,6 +9,7 @@ interface responseBody {
 }
 ```
 - shortenUrl 과 uwreckcar 서비스에서 사용하는 mongoDB는 서로 다릅니다.
+- shortenUrl 서비스는 AWS lambda 로 운영되고 있습니다.
 
 ## Package.json script
 - `lint:check` : eslint 유효성 검사 실행

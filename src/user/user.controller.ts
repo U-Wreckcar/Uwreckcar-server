@@ -21,11 +21,8 @@ export async function withdrawCtr (ctx: Context, next: Next) {
   allShortenUrl.forEach(shortId => deleteShortUrl(shortId));
   await recordWithdrawReason(reason);
   await deleteUserInfo(_id.toString());
-  ctx.status = 200;
-  ctx.response.body = {
-    result : { success : true, message : '' },
-    data : {},
-  };
+
+  ctx.response.body = responseBody(true, '', {});
   await next();
 }
 

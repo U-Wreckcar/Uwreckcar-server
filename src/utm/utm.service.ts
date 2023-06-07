@@ -1,4 +1,3 @@
-// Excel file 추출하기.
 import { UTM } from './utm.types';
 import jsonToXlsx, { IContent, IJsonSheet } from 'json-as-xlsx';
 import xlsx from 'xlsx';

@@ -13,7 +13,7 @@ if (process.env.NODE_ENV === 'production') {
   throw new Error('Not defined process.env.NODE_ENV');
 }
 
-import Koa, { Context, Next } from 'koa';
+import Koa  from 'koa';
 import { koaBody } from 'koa-body';
 import errorHandler from './src/util/error.handler';
 import cors from '@koa/cors';
